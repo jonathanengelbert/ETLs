@@ -1,4 +1,9 @@
-#ADD LOGGING
+# This script copies and processes MUNI stops and routes data from DataSF.
+#Last modified: 11/21/2017 by Jonathan Engelbert
+#
+### No Known Issues
+###WARNING: Depends on "working" folder and "working.gdb" located at C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\
+################################################################################################
 
 
 import arcpy, time, datetime, os
@@ -11,15 +16,8 @@ Routes = "C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Routes"
 
 MUNIStops_shp_Staging = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIStops.gdb\\MUNIStops"
 MUNIRoutes_shp_Staging = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIRoutes.gdb\\MUNIRoutes"
-MUNIStops_shp_Ready = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIStops.gdb\\MUNIStops"
-MUNIRoutes_shp_Ready = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIRoutes.gdb\\MUNIRoutes"
-
 MUNIStops_Buffer_shp_Staging = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIStops.gdb\\MUNIStops_Buffer"
-MUNIStops_Buffer_shp_Ready = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIStops.gdb\\MUNIStops_Buffer"
-
 MUNIRoutes_Buffer_shp_Staging = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIRoutes.gdb\\MUNIRoutes_Buffer"
-MUNIRoutes_Buffer_shp_Ready = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\MUNIRoutes.gdb\\MUNIRoutes_Buffer"
-
 working_gdb = "C:\\ETLs\\TIM\\TIMUpdates\\working.gdb"
 
 myStartDate = str(datetime.date.today())
@@ -27,7 +25,10 @@ myStartTime = time.clock()
 logfile = open("C:/ETLs/TIM/TIMUpdates/Logs/"+ myStartDate + "MUNIStopsAndRoutes.txt", "w")
 logfile.write(str(time.ctime()) +": Started" + "\n")
 
+################################################################################################
 
+#STEP ONE 
+#QUERIES, COPIES AND MODIFYING PATHS
 
 try:
     
@@ -93,7 +94,10 @@ try:
     arcpy.CopyFeatures_management(fs, r"c:\ETLS\TIM\TIMUpdates\working.gdb\Stops5")
     print "Copied stops5"
 
-    
+   ################################################################################################
+
+    #STEP TWO 
+	#GEOPROCESSING   
 
     # Local variables:
     Stops = "C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Stops"
@@ -131,9 +135,6 @@ try:
     print "Dissolved Routes"
     logfile.write(str(time.ctime()) +": Dissolved Routes" + "\n")
 
-
-
-
     
 
     arcpy.Compact_management(working_gdb)
@@ -145,58 +146,21 @@ try:
     print "projected Stops"
     logfile.write(str(time.ctime()) +": Projected Stops" + "\n")
 
-    # Process: Delete Rows
-    # arcpy.DeleteRows_management(MUNIStops_shp_Ready)
-    # print "deleted rows"
-    #logfile.write(str(time.ctime()) +": Deleted stops from Ready" + "\n")
-
-    # Process: Append
-    #arcpy.Append_management(MUNIStops_shp_Staging, MUNIStops_shp_Ready, "TEST", "", "")
-    #print "Appended rows"
-    #logfile.write(str(time.ctime()) +": Appended stops to Ready" + "\n")
 
     # Process: Project (2)
     arcpy.Project_management(Routes, MUNIRoutes_shp_Staging, "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]", "WGS_1984_(ITRF08)_To_NAD_1983_2011", "PROJCS['NAD_1983_2011_StatePlane_California_III_FIPS_0403_Ft_US',GEOGCS['GCS_NAD_1983_2011',DATUM['D_NAD_1983_2011',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Lambert_Conformal_Conic'],PARAMETER['False_Easting',6561666.666666666],PARAMETER['False_Northing',1640416.666666667],PARAMETER['Central_Meridian',-120.5],PARAMETER['Standard_Parallel_1',37.06666666666667],PARAMETER['Standard_Parallel_2',38.43333333333333],PARAMETER['Latitude_Of_Origin',36.5],UNIT['Foot_US',0.3048006096012192]]", "NO_PRESERVE_SHAPE", "")
     print "projected routes"
     logfile.write(str(time.ctime()) +": Projected Routes" + "\n")
 
-    # Process: Delete Rows (2)
-    #arcpy.DeleteRows_management(MUNIRoutes_shp_Ready)
-    #print "deleted routes"
-    #logfile.write(str(time.ctime()) +": Deleted routes from Ready" + "\n")
-    # Process: Append (2)
-    #arcpy.Append_management(MUNIRoutes_shp_Staging, MUNIRoutes_shp_Ready, "TEST", "", "")
-    #print "appended routes"
-    #logfile.write(str(time.ctime()) +": Appended Routes to Ready" + "\n")
-
-
     # Process: Buffer
     arcpy.Buffer_analysis(MUNIStops_shp_Staging, MUNIStops_Buffer_shp_Staging, "0.25 Miles", "FULL", "ROUND", "NONE", "", "PLANAR")
-    #print "Buffered stops"
-    #logfile.write(str(time.ctime()) +": Buffered Stops" + "\n")
-    # Process: Delete Rows
-    #arcpy.DeleteRows_management(MUNIStops_Buffer_shp_Ready)
-    #print "deleted rows from stops buffer"
-    #logfile.write(str(time.ctime()) +": Deleted stops buffer from Ready" + "\n")
-    # Process: Append
-    #arcpy.Append_management(MUNIStops_Buffer_shp_Staging, MUNIStops_Buffer_shp_Ready, "TEST", "", "")
-    #print "appended stops buffer"
-    #logfile.write(str(time.ctime()) +": Appended Stops buffer to Ready" + "\n")
-
+    print "Buffered stops"
+    logfile.write(str(time.ctime()) +": Buffered Stops" + "\n")
 
     # Process: Buffer (2)
     arcpy.Buffer_analysis(MUNIRoutes_shp_Staging, MUNIRoutes_Buffer_shp_Staging, "0.25 Miles", "FULL", "ROUND", "NONE", "", "PLANAR")
     print "Buffered routes"
     logfile.write(str(time.ctime()) +": Buffered Routes" + "\n")
-    # Process: Delete Rows (2)
-    #arcpy.DeleteRows_management(MUNIRoutes_Buffer_shp_Ready)
-    #print "deleted rows from routes buffer"
-    #logfile.write(str(time.ctime()) +": Deleted buffer routes from Ready" + "\n")
-    # Process: Append (2)
-    #arcpy.Append_management(MUNIRoutes_Buffer_shp_Staging, MUNIRoutes_Buffer_shp_Ready, "TEST", "", "")
-    #print "appended routes buffer"
-    #logfile.write(str(time.ctime()) +": Appended Routes buffer to Ready" + "\n")
-
 
     #Now refresh all indexes
     # Local variables:
@@ -268,58 +232,11 @@ try:
         print "FAILED to refresh spatial index for TIMStaging MUNI Routes buffer"
         logfile.write(str(time.ctime()) +": FAILED to refresh spatial index for TIMStaging MUNI Routes buffer" + "\n")
         
-        
+	
 
-    #Copy over the Routes and Stops to CPC-POSTGIS-1
-    gis_db_gisdata_Transport_Muni_Routes = "Database Connections\\cpc-postgis-1_GISData.sde\\gis_db.gisdata.Transport_Muni_Routes"
-    gis_db_gisdata_Transport_Muni_Stops = "Database Connections\\cpc-postgis-1_GISData.sde\\gis_db.gisdata.Transport_Muni_Stops"
-    Routes = "C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Routes"
-    Stops = "C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Stops"
-
-    #try:
-    #    arcpy.TruncateTable_management(gis_db_gisdata_Transport_Muni_Routes)
-    #    print "Truncated routes in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": Truncated routes in cpc-postgis-1" + "\n")
-    #    arcpy.Append_management("C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Routes", gis_db_gisdata_Transport_Muni_Routes, "NO_TEST", "route_name \"ROUTE_NAME\" true true false 4 Text 0 0 ,First,#,C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Routes,ROUTE_NAME,-1,-1;service_ca \"SERVICE_CA\" true true false 254 Text 0 0 ,First,#,C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Routes,SERVICE_CA,-1,-1;st_length(shape) \"st_length(shape)\" false false true 0 Double 0 0 ,First,#", "")
-    #    print "Appended routes in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": Appended routes in cpc-postgis-1" + "\n")
-    #except:
-    #    print "FAILED to refresh routes in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": FAILED to refresh routes in cpc-postgis-1" + "\n")
-
-    #try:
-    #    arcpy.AddSpatialIndex_management(gis_db_gisdata_Transport_Muni_Routes, "35000", "0", "0")
-    #    print "Refreshed routes spatial index in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": Refreshed routes spatial index in cpc-postgis-1" + "\n")
-    #except:
-    #    print "FAILED to refresh routes spatial index in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": FAILED to refresh routes spatial index in cpc-postgis-1" + "\n")
-
-    #try:
-    #    arcpy.TruncateTable_management(gis_db_gisdata_Transport_Muni_Stops)
-    #    print "Truncated stops in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": Truncated stops in cpc-postgis-1" + "\n")
-    #    arcpy.Append_management("C:\\ETLs\\TIM\\TIMUpdates\\working.gdb\\Stops", gis_db_gisdata_Transport_Muni_Stops, "TEST", "", "")
-    #    print "Appended stops in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": Appended stops in cpc-postgis-1" + "\n")
-    #except:
-    #    print "FAILED to refresh stops in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": FAILED to refresh stops in cpc-postgis-1" + "\n")
-
-    #try:
-    #    arcpy.AddSpatialIndex_management(gis_db_gisdata_Transport_Muni_Stops, "811.4136974877", "0", "0")
-    #    logfile.write(str(time.ctime()) +": Refreshed stops spatial index in cpc-postgis-1" + "\n")
-    #except:
-    #    print "FAILED to refresh stops spatial index in cpc-postgis-1"
-    #    logfile.write(str(time.ctime()) +": FAILED to refresh stops spatial index in cpc-postgis-1" + "\n")
- 
-
-
-
+    logfile.write(str(time.ctime()) +": FINISHED SUCCESSFULLY" + "\n")
+    print("FINISHED SUCCESSFULLY")
     
-
-    logfile.write(str(time.ctime()) +": Finished Successfully!" + "\n")
-
     myEndTime = time.clock()
     theTime = myEndTime - myStartTime
     theEndTime = time.ctime()
@@ -328,8 +245,9 @@ try:
     print "Ran for a total of " + str(theTime) + " seconds (" + str(theMinutes) + " minutes)"
     logfile.write(str(time.ctime()) +" Ran for a total of " + str(theTime) + " seconds (" + str(theMinutes) + " minutes)")
     logfile.close()
-
-
+    
+################################################################################################
+	
 except Exception,e:
     print "Ended badly"
     logfile.write(str(time.ctime()) +": Finished with ERROR! \n\n")

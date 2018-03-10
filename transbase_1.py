@@ -1,4 +1,11 @@
 # This script copies the basic layers from Transbase needed by TIM, with the exception of injury data.
+#Last modified: 11/21/2017 by Jonathan Engelbert
+#
+### No Known Issues
+### WARNING: #CAUTION: The field "overlap" in dataset "TB_overall_hgh_injry_network" no longer exists 
+### in newer versions of this dataset. It has been deleted for processing, and might cause problems 
+### once the data is loaded. See STEP THREE below for old code and notes.
+################################################################################################
 
 import arcpy
 from arcpy import env
@@ -26,6 +33,7 @@ if 1==1:
     theDay=when.strftime("%A")
     print theDay
 
+################################################################################################
 
     # STEP ONE
     # COPYING FROM SDE TO LOCAL STAGING FOLDER: SET NAMES AND PATHS
@@ -36,7 +44,7 @@ if 1==1:
     locallist = []
 
     # filepath for all copied files:
-    stagingfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\Transbase_1.gdb\\"
+    staging_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\Transbase_1.gdb\\"
 
     # intersection - transpo variables
     tb_transpo = "C:\\SDE_Connections\\Transbase.sde\\transbase_public.public.vw_geo_intrsctn_trnsprtn"
@@ -80,6 +88,8 @@ if 1==1:
     file.write(str(time.ctime()) +": " +str(len(transbaselist)) + " layers from Transbase identified"+ "\n")
     file.write(str(time.ctime()) +": " +str(len(locallist)) + " destination layers set"+ "\n")
 
+################################################################################################
+	
     # STEP TWO
     # COPYING FROM SDE TO LOCAL STAGING FOLDER: DO THE ACTUAL COPYING
 
@@ -88,10 +98,10 @@ if 1==1:
     for i in range(0,len(transbaselist)):
         print("\n")
         print "Copying files - iteration " + str(i) + ":"
-        print "New file path: " + stagingfolder + locallist[i]
+        print "New file path: " + staging_gdb + locallist[i]
         print "From: " + transbaselist[i]
         try:
-            filename = stagingfolder + locallist[i]
+            filename = staging_gdb + locallist[i]
             arcpy.CopyFeatures_management(transbaselist[i], filename, "", "0", "0", "0")
         except:
             print "FAILED TO COPY " + filename
@@ -109,8 +119,8 @@ if 1==1:
         print("\n")
         print "Buffering " + buffer_name
         bufferlist.append(buffer_name)
-        staging_name = stagingfolder + original_name
-        filename_buffer = stagingfolder + buffer_name
+        staging_name = staging_gdb + original_name
+        filename_buffer = staging_gdb + buffer_name
         arcpy.Buffer_analysis(staging_name, filename_buffer, buffer_dist, "", "", dissolve_opt, dissolve_fld)
         
 
@@ -153,50 +163,14 @@ if 1==1:
     file.write(str(time.ctime()) +": 500ft buffer - cap imp"+ "\n")
 	
     print str(len(bufferlist)) + " buffer layers created"
-    
-    # STEP FOUR
-    # DELETE AND APPEND
-    #print "STEP 4"
-    #ready_folder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\"
 
-    #def deleteandappend(shpname):
-    #    print "Delete and append " + shpname
-    #    live_file = ready_folder + shpname
-    #    print "D&A 1"
-    #    staging_file = stagingfolder + shpname
-    #    print "D&A 2 : " + live_file
-    #    try:
-    #        arcpy.DeleteRows_management(live_file)
-    #       print "D&A 3: from " + staging_file + " to " + live_file
-    #        arcpy.Append_management(staging_file, live_file, "TEST", "", "")
-    #        print "D&A 4"
-    #   except:
-    #       print "failed to copy over "+shpname+", schema probably different or file is locked"
-    #        file.write(str(time.ctime()) +": Failed to copy over from timstaging to timready "+shpname+", schema probably different"+ "\n")
-            
-    
-    # testing
-    #print "Running test"
-    #deleteandappend(tb_transpo_local)
-    
-    # delete and append feature layers
-    #print "starting delete and append loop"
-    #for i in locallist:
-    #    print "i: " + str(i)
-    #   deleteandappend(i)
-    #    print "Iteration " + i + " done"
-
-    #file.write(str(time.ctime()) +"deleted and appended"+ "\n")
-    # delete and append buffer layers
-    #for i in bufferlist:
-    #    deleteandappend(i)
-    #    print "Iteration " + i + " done"
-    #file.write(str(time.ctime()) +": deleted and appended buffers"+ "\n")
     file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY"+ "\n")
     file.close()
 
+################################################################################################	
+	
 try:
-    print "Finished"
+    print "FINISHED SUCCESSFULLY"
 except Exception,e:
     print "Ended badly"
     file.write(str(time.ctime()) +": Ended badly")
