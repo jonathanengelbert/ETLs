@@ -17,7 +17,7 @@ They may only serve as syntax and structural reference. Also, they are heavily b
 
 ### Installing
 
-No instalation required.
+No installation required.
 
 ## Authors
 
