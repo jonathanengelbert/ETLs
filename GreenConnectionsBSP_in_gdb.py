@@ -1,4 +1,8 @@
-# this script pulls Better Streets plan and Green Connections from the Planning SDE into TIM.
+#This script pulls Better Streets plan and Green Connections from the Planning SDE into TIM.
+#Last modified: 11/21/2017 by Jonathan Engelbert
+#
+### No Known Issues
+################################################################################################
 
 import arcpy
 from arcpy import env
@@ -18,24 +22,24 @@ try:
     myStartTime = time.clock()
     theStartTime = time.ctime()
     # thisfile = os.path.realpath(__file__)
-    file = open("C:/ETLs/TIM/TIMUpdates/Logs/" + myStartDate + "BSP_GreenConnections" + ".txt", "w")
+    file = open("C:/ETLs/TIM/TIMUpdates/logs/" + myStartDate + "BSP_GreenConnections" + ".txt", "w")
     file.write(theStartTime + "\n")
     when =datetime.date.today()
     theDate = when.strftime("%d")
     theDay=when.strftime("%A")
     print theDay
 
-
+################################################################################################
+    
     # STEP ONE
     # COPYING FROM SDE TO LOCAL STAGING FOLDER: SET NAMES AND PATHS AND COPY
 
     # filepath for all copied files:
-    stagingfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\"
-    staging_gdb = "C:\\arcgisserver\\DataAndMXDs\\TIMStaging\\GreenConnections.gdb\\"
+    staging_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\GreenConnections.gdb\\"
     
     # better streets plan
     try:
-        bsp_sde = "Database Connections\\CITYPLAN-03SDE_Service_GISData.sde\\GISDATA.BetterStreetsPlan"
+        bsp_sde = "Database Connections\\CITYPLAN-03SDE.sde\\GISDATA.BetterStreetsPlan"
         bsp_local_1 = "bsp_1"
         arcpy.CopyFeatures_management(bsp_sde, staging_gdb + bsp_local_1)
         print "BSP copied from SDE to staging folder"
@@ -43,17 +47,8 @@ try:
     except:
         file.write(str(time.ctime()) +": FAILED TO COPY - BSP"+ "\n")
     
-    # # better streets plan
-    # bsp_sde = "Database Connections\\CITYPLAN-03SDE_Service_GISData.sde\\GISDATA.BetterStreetsPlan"
-    # bsp_local_1 = "bsp_1.shp"
-    # print "BSP loaded from " + bsp_sde
-    # # arcpy.CopyFeatures_management(bsp_sde, stagingfolder + bsp_local_1, "", "0", "0", "0")
-    # arcpy.CopyFeatures_management(bsp_sde, stagingfolder + bsp_local_1)
-    # print "Saved to " + bsp_local_1
-    # file.write(str(time.ctime()) +": copied features - bsp"+ "\n")
-    
     # green connections
-    gc_sde = "Database Connections\\CITYPLAN-03SDE_Service_GISData.sde\\GISDATA.GreenConnectionsNetwork"
+    gc_sde = "Database Connections\\CITYPLAN-03SDE.sde\\GISDATA.GreenConnectionsNetwork"
     print "Green Connections loaded from " + gc_sde
     
     gc_layername = "gc_layer" # make into layer to get selection
@@ -64,6 +59,8 @@ try:
     file.write(str(time.ctime()) +": copied green connections"+ "\n")
     
     print "Saved to " + gc_local_1
+
+################################################################################################
     
 
     # STEP TWO
@@ -87,7 +84,7 @@ try:
     
     # process BSP data    
     # load table of sidewalk widths
-    BSP_sidewalks = "C:\\arcgisserver\\DataAndMXDs\\TIMStaging\\BSP_sidewalks_OID.dbf"
+    BSP_sidewalks = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\BSP_sidewalks_OID.dbf"
     print "BSP table loaded"
     
     # add field for final street type
@@ -103,7 +100,7 @@ try:
     # Dissolve BSP (dissolve before join to make join faster)
     bsp_local_3 = "BetterStreetsPlan_TIM"
     arcpy.Dissolve_management(staging_gdb + bsp_local_2, staging_gdb + bsp_local_3, ["STREETNAME","BSP_Class","Special","finaltype"], "", "", "")
-    print "BSP dissolved" 
+    print "BSP dissolved"
     print "BSP joining fields..."
     file.write(str(time.ctime()) +": dissolved"+ "\n")
     
@@ -138,37 +135,17 @@ try:
     arcpybuffer("greenconnectionsbuffer",gc_local_3,"250 Feet","","")
     file.write(str(time.ctime()) +": buffered2"+ "\n")
     
-    # STEP FOUR
-    # DELETE AND APPEND
+    print("FINISHED SUCCESSFULLY")
     
-    ready_folder = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\GreenConnections.gdb\\"
-
-    def deleteandappend(shpname):
-        print "Delete and append " + shpname
-        live_file = ready_folder + shpname
-        staging_file = staging_gdb + shpname
-        arcpy.DeleteRows_management(live_file)
-        arcpy.Append_management(staging_file, live_file, "TEST", "", "")
-    
-    # delete and append feature layers
-    deleteandappend(bsp_local_3)
-    deleteandappend(gc_local_3)
-    
-    # delete and append buffer layers
-    deleteandappend("betterstreetsbuffer")
-    file.write(str(time.ctime()) +": deleted and appended local"+ "\n")
-    deleteandappend("greenconnectionsbuffer")
-    file.write(str(time.ctime()) +": deleted and appended buffer"+ "\n")
     file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY"+ "\n")
     file.close()
+
+################################################################################################
     
 except Exception,e:
+    print str(e)
     print "Ended badly"
     file.write(str(time.ctime()) +": Ended badly")
-    file.write(arcpy.GetMessages())
-    file.write(arcpy.GetMessages(2))
-    file.write(arcpy.GetMessages(1))
-    print str(e)
     file.write(str(e))
     file.close()
     print arcpy.GetMessages()

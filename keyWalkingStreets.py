@@ -1,4 +1,9 @@
-# Import arcpy and other modules
+#This script loads and processes key Walking Streets data
+#Last modified: ?? by ??
+#
+### No Known Issues
+################################################################################################
+
 import arcpy
 from arcpy import env
 import sys, string, os, time, datetime

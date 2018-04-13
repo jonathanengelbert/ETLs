@@ -1,16 +1,16 @@
-C:\ETLs\TIM\TIMUpdates\BayAreaBikeShare_v2.py
-C:\ETLs\TIM\TIMUpdates\BikeRoutesDataSF.py
-C:\ETLs\TIM\TIMUpdates\BSP_GreenConnections.py
-C:\ETLs\TIM\TIMUpdates\DataSF_Bikeparking.py
-C:\ETLs\TIM\TIMUpdates\DataSF_CurbRamps.py
-C:\ETLs\TIM\TIMUpdates\DataSF_TrafficCalming.py
-C:\ETLs\TIM\TIMUpdates\DataSF_TransitStops.py
-C:\ETLs\TIM\TIMUpdates\DataSF_TruckRoutes.py
-C:\ETLs\TIM\TIMUpdates\MUNIStopsAndRoutes.py
-C:\ETLs\TIM\TIMUpdates\transbase_1.py
-C:\ETLs\TIM\TIMUpdates\transbase_2v2.py
-C:\ETLs\TIM\TIMUpdates\CurbCutRestrictions.py
-C:\ETLs\TIM\TIMUpdates\keyWalkingStreets.py
-C:\ETLs\TIM\TIMUpdates\mitigation_measures.py
-C:\ETLs\TIM\TIMUpdates\UpdateSpatialIndexes.py
-c:\ETLs\TIM\SendToAmazon.py
+"C:\ETLs\TIM\TIMUpdates\New ETLs\BayAreaBikeShare_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\BikeparkingDataSF_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\BikeRoutesDataSF_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\CurbCutRestrictions_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\CurbRampsDataSF_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\GreenConnectionsBSP_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\KeyWalkingStreets.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\mitigation_measures.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\MUNIStopsAndRoutes_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\TrafficCalmingDataSF_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\Transbase_1.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\Transbase_2v2.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\TransitStopsDataSF_in_gdb.py"
+"C:\ETLs\TIM\TIMUpdates\New ETLs\TruckRoutesDataSF.py"
+
+

@@ -1,10 +1,14 @@
 # This script copies and processes Curb Ramp data from DataSF.
+#Last modified: 12/01/2017 by Jonathan Engelbert
+#
+### No Known Issues
+################################################################################################
 
 import arcpy, sys, string, os, time, datetime, urllib, urllib2, json
 from urllib2 import Request, urlopen
 from arcpy import env
 
-# chnage default encoding to read the decoded data from JSON
+#change default encoding to read the decoded data from JSON
 #reload(sys)
 #sys.setdefaultencoding("utf-8")
 
@@ -22,14 +26,19 @@ try:
     myStartTime = time.clock()
     theStartTime = time.ctime()
     # thisfile = os.path.realpath(__file__)
-    file = open("C:/ETLs/TIM/Logs/" + myStartDate + "CurbRamps" + ".txt", "w")
+    file = open("C:/ETLs/TIM/TIMUpdates/Logs/" + myStartDate + "CurbRamps" + ".txt", "w")
     file.write(theStartTime + "\n")
     when =datetime.date.today()
     theDate = when.strftime("%d")
     theDay=when.strftime("%A")
     print theDay
 
-    stagingfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\CurbRampRestrictions.gdb\\"
+################################################################################################
+
+    # STEP ONE
+    # PULL DATA FROM DATASF API IN JSON  
+    
+    staging_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\CurbRampRestrictions.gdb\\"
 
     def file_get_contents(filename):
         with open(filename) as f:
@@ -47,7 +56,7 @@ try:
     headers = { 'Content-Type' : contentType }
     params=None
 
-    txtfile = open("\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\CurbRampRestrictions.gdb\\missingcurbramps.csv", "w")
+    txtfile = open("\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv", "w")
     i=0
     thelimit=10000
     k=0
@@ -64,14 +73,15 @@ try:
         if d==[]:
             hasMore=False
         else:
-            
-            namelist = ["locationdescription","locid","cnn","positiononreturn","curbreturnloc","latitude","longitude"]
-            for f in namelist:
-                if f != "longitude":
-                    txtfile.write(str(f.encode('ascii','ignore')).replace("\n","")+',')
-                else:
-                    txtfile.write(str(f.encode('ascii','ignore')).replace("\n",""))
-            txtfile.write("\n")
+
+            if k == 0:
+                namelist = ["locationdescription","locid","cnn","positiononreturn","curbreturnloc","latitude","longitude"]
+                for f in namelist:
+                    if f != "longitude":
+                        txtfile.write(str(f.encode('ascii','ignore')).replace("\n","")+',')
+                    else:
+                        txtfile.write(str(f.encode('ascii','ignore')).replace("\n",""))
+                txtfile.write("\n")
             
             for record in d:
                 i=i+1
@@ -95,11 +105,28 @@ try:
     txtfile.close()
     
     # create XY event layer
-    print "Converting to XY Event Layer..."
-    table = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\missingcurbramps.csv"
-    arcpy.MakeXYEventLayer_management(table, "longitude", "latitude", "templayer", "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119521E-09;0.001;0.001;IsHighPrecision", "")
-    print "Converted to event layer"
-    file.write(str(time.ctime()) +": converted to event layer"+ "\n")
+    try:
+        # Local variables:
+        missingcurbramps_csv = "\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv"     
+        Output_Location = "\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\"
+
+    # Process: Table to Table
+        arcpy.TableToTable_conversion(missingcurbramps_csv, Output_Location, "missingcurbramps_table", "", "locationdescription \"locationdescription\" true true false 8000 Text 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,locationdescription,-1,-1;locid \"locid\" true true false 8000 Text 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,locid,-1,-1;cnn \"cnn\" true true false 8000 Text 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,cnn,-1,-1;positiononreturn \"positiononreturn\" true true false 8000 Text 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,positiononreturn,-1,-1;curbreturnloc \"curbreturnloc\" true true false 8000 Text 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,curbreturnloc,-1,-1;latitude \"latitude\" true true false 8000 Float 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,latitude,-1,-1;longitude \"longitude\" true true false 8000 Float 0 0 ,First,#,\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps.csv,longitude,-1,-1", "")
+        print "Converting to XY Event Layer..."
+        
+        missingcurbramps_table = "\\\\cp-gis-svr1\\arcgisserver\\DataAndMXDs\\TIMReady\\missingcurbramps_table.dbf"
+        
+       
+
+# Process: Make XY Event Layer
+        arcpy.MakeXYEventLayer_management(missingcurbramps_table, "longitude", "latitude", "templayer", "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119522E-09;0.001;0.001;IsHighPrecision", "")                              
+        print "Converted to event layer"
+        file.write(str(time.ctime()) +": converted to event layer"+ "\n")
+    except Exception,e:
+        print "Ended badly"
+        print str(e)
+        file.write(str(time.ctime()) +": Ended badly")
+################################################################################################
     
     # STEP TWO
     # GEOPROCESSING
@@ -109,7 +136,7 @@ try:
     print "Reprojecting..."
     local2 = "missingcurbramps"
     webmercator = arcpy.SpatialReference(3857)
-    arcpy.Project_management("templayer", stagingfolder + local2, webmercator)
+    arcpy.Project_management("templayer", staging_gdb + local2, webmercator)
     print "Reprojected to " + local2
     file.write(str(time.ctime()) +": reprojected"+ "\n")
     
@@ -119,8 +146,8 @@ try:
         print("\n")
         print "Buffering " + buffer_name
         # bufferlist.append(buffer_name)
-        staging_name = stagingfolder + original_name
-        filename_buffer = stagingfolder + buffer_name
+        staging_name = staging_gdb + original_name
+        filename_buffer = staging_gdb + buffer_name
         arcpy.Buffer_analysis(staging_name, filename_buffer, buffer_dist, "", "", dissolve_opt, dissolve_fld)
 
         
@@ -130,28 +157,12 @@ try:
     print "Buffer created"
     file.write(str(time.ctime()) +": buffered"+ "\n")
     
-    
-    # STEP FOUR
-    # DELETE AND APPEND
-    
-    ready_folder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\"
+    print("FINISHED SUCCESSFULLY")
 
-    def deleteandappend(shpname):
-        print "Delete and append " + shpname
-        live_file = ready_folder + shpname
-        staging_file = stagingfolder + shpname
-        arcpy.DeleteRows_management(live_file)
-        arcpy.Append_management(staging_file, live_file, "TEST", "", "")
-    
-    # delete and append feature layers
-    #deleteandappend(local2)
-    #file.write(str(time.ctime()) +": deleted and appended local"+ "\n")
-    
-    # delete and append buffer layers
-    #deleteandappend(buffername)
-    #file.write(str(time.ctime()) +": deleted and appended buffer"+ "\n")
     file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY"+ "\n")
     file.close()
+
+################################################################################################
     
 except Exception,e:
     print "Ended badly"

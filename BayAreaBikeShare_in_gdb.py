@@ -1,4 +1,8 @@
 # This script copies and processes Bay Area Bike share data from the API.
+#Last modified: 11/20/2017 by Jonathan Engelbert
+#
+#No Known issues 
+##################################################################################
 
 import arcpy, sys, string, os, time, datetime, urllib, urllib2, json
 from urllib2 import Request, urlopen
@@ -20,6 +24,8 @@ theStartTime = time.ctime()
 
 print theStartTime
 
+
+
 try:
 
 
@@ -27,7 +33,7 @@ try:
     myStartTime = time.clock()
     theStartTime = time.ctime()
     # thisfile = os.path.realpath(__file__)
-    file = open("C:/ETLs/TIM/Logs/" + myStartDate + "BABS" + ".txt", "w")
+    file = open("C:/ETLs/TIM/TIMUpdates/Logs/" + myStartDate + "BABS" + ".txt", "w")
     file.write(theStartTime + "\n")
     when =datetime.date.today()
     theDate = when.strftime("%d")
@@ -38,8 +44,10 @@ try:
     # COPYING FROM SDE TO LOCAL STAGING FOLDER: SET NAMES AND PATHS
 
     # filepath for all copied files:
-    stagingfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\"
-    stagingfile_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\bikeshare.gdb\\"
+    staging_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\bikeshare.gdb\\"
+    # Local variables:
+    bikeshare_gdb = "C:\\arcgisserver\\DataAndMXDs\\TIMReady\\bikeshare.gdb"
+    bikeshare_gdb__2_ = bikeshare_gdb
     
     # change default encoding to read the decoded data from JSON
     #reload(sys)
@@ -68,7 +76,7 @@ try:
     #Comment out the next line to switch to POST
     params=None
 
-    txtfile = open(stagingfolder + "BABS.csv", "w")
+    txtfile = open("C:\\arcgisserver\\DataAndMXDs\\TIMReady\\BABS.csv", "w")
 
     url='http://www.bayareabikeshare.com/stations/json'
     url='http://feeds.bayareabikeshare.com/stations/stations.json'
@@ -111,9 +119,9 @@ try:
     
     # create XY event layer
     print "Converting to XY Event Layer"
-    table = stagingfolder + "BABS.csv"
+    table = staging_gdb + "BABS.csv"
     local1 = "babs_1"
-    arcpy.MakeXYEventLayer_management(table, "longitude", "latitude", stagingfile_gdb + local1, "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119521E-09;0.001;0.001;IsHighPrecision", "")
+    arcpy.MakeXYEventLayer_management(table, "longitude", "latitude", staging_gdb + local1, "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]];-400 -400 1000000000;-100000 10000;-100000 10000;8.98315284119521E-09;0.001;0.001;IsHighPrecision", "")
     print("Finished with make XY")
 
    
@@ -125,7 +133,7 @@ try:
     print "Reprojecting"
     local2 = "BikeShareStations"
     webmercator = arcpy.SpatialReference(3857)
-    arcpy.Project_management(stagingfile_gdb + local1, stagingfile_gdb + local2, webmercator)
+    arcpy.Project_management(staging_gdb + local1, staging_gdb + local2, webmercator)
     print "GC reprojected to " + local2
     file.write(str(time.ctime()) +": " + " GC reprojected to " + local2+ "\n")
 
@@ -136,8 +144,8 @@ try:
         print("\n")
         print "Buffering " + buffer_name
         # bufferlist.append(buffer_name)
-        staging_name = stagingfile_gdb + original_name
-        filename_buffer = stagingfile_gdb + buffer_name
+        staging_name = staging_gdb + original_name
+        filename_buffer = staging_gdb + buffer_name
         arcpy.Buffer_analysis(staging_name, filename_buffer, buffer_dist, "", "", dissolve_opt, dissolve_fld)
 
         
@@ -145,45 +153,11 @@ try:
     buffername = "BikeShareStations_buffer"
     arcpybuffer(buffername,local2,"1000 Feet","","")
     
+    print ("FINISHED SUCCESSFULLY")
+    
 
-    
-    # STEP FOUR
-    # DELETE AND APPEND
-    
-    ready_folder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\"
-    ready_folder_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\bikeshare.gdb\\"
-
-    def deleteandappend(shpname):
-        print "Delete and append " + shpname
-        live_file = ready_folder_gdb + shpname
-        staging_file = stagingfile_gdb + shpname
-        arcpy.DeleteRows_management(live_file)
-        arcpy.Append_management(staging_file, live_file, "TEST", "", "")
-    
-    # delete and append feature layers
-    deleteandappend(local2)
-    file.write(str(time.ctime()) +": deleted and appended features"+ "\n")
-    
-    # delete and append buffer layers
-    deleteandappend(buffername)
-    file.write(str(time.ctime()) +": deleted and appended buffer layers"+ "\n")
     file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY"+ "\n")
     file.close()
-
-    # Local variables:
-    BikeShareStations_buffer = "C:\\arcgisserver\\DataAndMXDs\\TIMStaging\\bikeshare.gdb\\BikeShareStations_buffer"  
-    BikeShareStations_buffer__2_ = BikeShareStations_buffer
-
-    # Process: Add Spatial Index
-    arcpy.AddSpatialIndex_management(BikeShareStations_buffer, "610", "0", "0")
-
-    # Local variables:
-    bikeshare_gdb = "C:\\arcgisserver\\DataAndMXDs\\TIMStaging\\bikeshare.gdb"
-    bikeshare_gdb__2_ = bikeshare_gdb
-
-    # Process: Compact
-    arcpy.Compact_management(bikeshare_gdb)
-
 
     
 except Exception,e:

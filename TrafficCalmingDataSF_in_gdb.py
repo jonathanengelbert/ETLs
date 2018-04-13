@@ -1,4 +1,8 @@
 # This script copies and processes traffic calming data from DataSF.
+#Last modified: 11/21/2017 by Jonathan Engelbert
+#
+### No Known Issues
+################################################################################################
 
 import arcpy, sys, string, os, time, datetime, urllib, urllib2, json, zipfile
 from zipfile import ZipFile
@@ -29,6 +33,8 @@ try:
     theDay=when.strftime("%A")
     print theDay
 
+################################################################################################
+
     # STEP ONE
     # PULL SHAPEFILE FROM DATASF
 
@@ -39,10 +45,10 @@ try:
        os.remove(i)
 
     # filepath for all copied files:
-    stagingfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\"
-    tempzipfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\zip\\"
+    staging_gdb = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\TrafficCalming.gdb\\"
+    tempzipfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\zip\\"
     
-    zipfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\zip\\"
+    zipfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\zip\\"
     zip_temp = zipfolder + 'TC.zip'
 
     dl_link= "https://data.sfgov.org/api/geospatial/ddye-rism?method=export&format=Shapefile"
@@ -53,7 +59,7 @@ try:
     output.close()
     zf = ZipFile(zip_temp, 'r')
     print zf.namelist()
-    tempfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\zip\\TC\\"
+    tempfolder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\zip\\TC\\"
     #Clear out the folder
     import glob, os
     test = tempfolder+'/*'
@@ -71,15 +77,8 @@ try:
     
     temp_shp = tempfolder + newstring + ".shp"
     print temp_shp
-        # print tempfolder + filename + "," + tempfolder + filename.replace(replacestring, newstring)
-        # myfilename="\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMStaging\\zip\\TC\\"+filename.replace(replacestring, newstring) 
-        #if (os.path.isfile(myfilename)):
-        #    print "removing file: " + myfilename
-        #    os.remove(myfilename)
-        #print "renaming file"
-        #os.rename(tempfolder + filename, tempfolder + filename.replace(replacestring, newstring))
-        #print "renamed"
-        
+
+################################################################################################        
     
     # STEP TWO
     # GEOPROCESSING
@@ -87,10 +86,10 @@ try:
     # Project both layers
     
     try:
-        local2 = "Traffic_Calming.shp"
-        print "try to reproject " + temp_shp + " to " + stagingfolder + local2
+        local2 = "Traffic_Calming"
+        print "try to reproject " + temp_shp + " to " + staging_gdb + local2
         webmercator = arcpy.SpatialReference(3857)
-        arcpy.Project_management(temp_shp, stagingfolder + local2, webmercator)
+        arcpy.Project_management(temp_shp, staging_gdb + local2, webmercator)
         print "Reprojected to " + local2
         file.write(str(time.ctime()) +": Reprojected"+ "\n")
     except:
@@ -103,37 +102,22 @@ try:
         print("\n")
         print "Buffering " + buffer_name
         # bufferlist.append(buffer_name)
-        staging_name = stagingfolder + original_name
-        filename_buffer = stagingfolder + buffer_name
+        staging_name = staging_gdb + original_name
+        filename_buffer = staging_gdb + buffer_name
         arcpy.Buffer_analysis(staging_name, filename_buffer, buffer_dist, "", "", dissolve_opt, dissolve_fld)
 
         
     # Buffer BSP
-    buffername = "trafficcalmingbuffer.shp"
+    buffername = "trafficcalmingbuffer"
     arcpybuffer(buffername,local2,"250 Feet","","")
     
     
-    # STEP FOUR
-    # DELETE AND APPEND
-    
-    ready_folder = "\\\\CP-GIS-SVR1\\arcgisserver\\DataAndMXDs\\TIMReady\\"
+    print("FINISHED SUCCESFULLY")
 
-    def deleteandappend(shpname):
-        print "Delete and append " + shpname
-        live_file = ready_folder + shpname
-        staging_file = stagingfolder + shpname
-        arcpy.DeleteRows_management(live_file)
-        arcpy.Append_management(staging_file, live_file, "TEST", "", "")
-    
-    # delete and append feature layers
-    deleteandappend(local2)
-    file.write(str(time.ctime()) +": deleted and appended"+ "\n")
-    
-    # delete and append buffer layers
-    deleteandappend(buffername)
-    file.write(str(time.ctime()) +": deleted and appended buffers"+ "\n")
-    file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY!"+ "\n")
+    file.write(str(time.ctime()) +": FINISHED SUCCESSFULLY"+ "\n")
     file.close()
+
+################################################################################################    
     
 except Exception,e:
     print "Ended badly"

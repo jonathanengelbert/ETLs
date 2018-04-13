@@ -1,4 +1,9 @@
-# Import arcpy and other modules
+#This script processes mitigation measures data.
+#Last modified: 11/21/2017 by Mike Wynne
+#
+### No Known Issues
+################################################################################################
+
 import arcpy
 from arcpy import env
 import sys, string, os, time, datetime
@@ -19,7 +24,7 @@ myStartDate = str(datetime.date.today())
 myStartTime = time.clock()
 theStartTime = time.ctime()
 print theStartTime
-file = open("Logs/" + myStartDate + "test"+ ".txt", "w")
+file = open("C:\\ETLs\\TIM\\TIMUpdates\\Logs\\" + myStartDate + "test"+ ".txt", "w")
 file.write(theStartTime + "\n")
 when =datetime.date.today()
 theDate = when.strftime("%d")
@@ -35,7 +40,7 @@ try:
 	file.write("Deleted old feature class table" + "\n")
 	cursor = arcpy.da.InsertCursor(mitigation_layer, ['Title', 'Description', 'SHAPE@XY'])
 	
-	with open('Raw_Data/mitigation.csv', 'r') as f:
+	with open('C:\\ETLs\\TIM\\TIMUpdates\\Raw_Data\\mitigation.csv', 'r') as f:
 		reader = csv.DictReader(f)
 		#reader = [('Title1', 'The project is the construction of a 36-story 262', (-122.4248302, 37.7856142)),
 		#('Title2', 'The proposed project would demolish the existing', (-122.4248302, 37.7856142))]
@@ -70,7 +75,7 @@ except Exception,e:
 	print str(e)
 	print arcpy.GetMessages()
 	file.write(str(e) + "\n")
-	#file.write(arcpy.GetMessages() + "\n") I don't totally understand what arcpy.GetMessages() does
+	file.write(arcpy.GetMessages() + "\n" )
 	file.write(str(time.ctime()) +": Ended badly")
 	file.close()
 	
